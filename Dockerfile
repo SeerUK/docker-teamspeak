@@ -1,35 +1,33 @@
 FROM ubuntu:trusty
 MAINTAINER Elliot Wright <elliot@elliotwright.co>
 
-#Create Shared volume for Teamspeak Server Files
-VOLUME ["/data/teamspeak"]
-
-# Add repositories and update base
 RUN \
   apt-get update && \
   apt-get install -y --no-install-recommends ca-certificates curl && \
   apt-get clean && \
   rm -rf /var/lib/apt /tmp/* /var/tmp/* && \
-  useradd -d /opt/teamspeak -u 1000 -m -s /bin/bash teamspeak && \
+  useradd -d /opt/ts3server -u 1000 -m -s /bin/bash ts3server && \
+  mkdir -p /opt/ts3build && \
+  mkdir -p /opt/ts3server && \
   curl -Ls http://dl.4players.de/ts/releases/3.0.11.4/teamspeak3-server_linux-amd64-3.0.11.4.tar.gz | tar zxf - -C /tmp && \
-  cp -r /tmp/teamspeak3-server_linux-amd64/* /opt/teamspeak && \
+  cp -rf /tmp/teamspeak3-server_linux-amd64/* /opt/ts3build && \
   rm -rf /tmp/teamspeak3-server_linux-amd64
 
-COPY ./provisioning/scripts/start.sh /opt/teamspeak
+COPY ./provisioning/scripts/start.sh /opt/ts3build
 
 RUN \
-  chown -R teamspeak: /opt/teamspeak && \
-  chown -R teamspeak: /data && \
-  chmod +x /opt/teamspeak/start.sh
+  chown -R ts3server: /opt/ts3build && \
+  chown -R ts3server: /opt/ts3server && \
+  chmod +x /opt/ts3build/start.sh
 
-USER teamspeak
+USER ts3server
 
 EXPOSE 9987/udp
 EXPOSE 10011
 EXPOSE 30033
 
-VOLUME [ "/data/teamspeak" ]
+VOLUME [ "/opt/ts3server" ]
 
-WORKDIR /opt/teamspeak
+WORKDIR /opt/ts3server
 
-CMD [ "/opt/teamspeak/start.sh" ]
+CMD [ "/opt/ts3build/start.sh" ]
